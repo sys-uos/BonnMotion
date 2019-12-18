@@ -79,12 +79,6 @@ public class Column extends RandomSpeedBase {
 
 	public void go(String args[]) {
 		super.go(args);
-
-		if (this.numGroups == 0) {
-			System.out.println("Please define the number of groups.");
-			System.exit(1);
-		}
-
 		generate();
 	}
 

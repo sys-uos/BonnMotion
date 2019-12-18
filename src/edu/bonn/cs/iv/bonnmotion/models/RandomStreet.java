@@ -69,12 +69,6 @@ public class RandomStreet extends MapScenario
     public void go(String[] args)
     {
         super.go(args);
-
-        if (this.minSpeed == -1 || this.maxSpeed == -1) {
-            System.out.println("Please define the min and max node speed.");
-            System.exit(1);
-        }
-
         generate();
     }
 

@@ -89,12 +89,6 @@ public class RandomWalk extends RandomSpeedBase {
 
 	public void go(String[] args) {
 		super.go(args);
-
-		if (this.mode != 't' && this.mode != 's') {
-			System.out.println("Please define the mode.");
-			System.exit(1);
-		}
-
 		generate();
 	}
 

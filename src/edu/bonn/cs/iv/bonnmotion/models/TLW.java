@@ -91,16 +91,6 @@ public class TLW extends Scenario {
     
     public void go(String[] args) {
         super.go(args);
-
-        if (this.alpha < .1 || this.alpha > 2) {
-            System.out.println("Alpha value must be in [.1,2]");
-            System.exit(1);
-        }
-        if (this.beta < .1 || this.beta > 2) {
-            System.out.println("Beta value must be in [.1,2]");
-            System.exit(1);
-        }
-
         generate();
     }
 
@@ -233,7 +223,6 @@ public class TLW extends Scenario {
 	        	}
 	        	else {
 	        		System.err.println("Error@TLW: invalid boundary condition");
-                    System.exit(1);
 	        	}
 	        	
 	        	double dist = Math.sqrt( (double) Math.pow( (next_x - x_values[i-1]), 2 ) + Math.pow( (next_y - y_values[i-1]), 2 ) );

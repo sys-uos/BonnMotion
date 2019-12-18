@@ -47,7 +47,7 @@ public class MSLAW extends MapScenario {
         
         info.major = 2;
         info.minor = 0;
-        info.revision = ModuleInfo.getSVNRevisionStringValue("$LastChangedRevision: 766 $");
+        info.revision = ModuleInfo.getSVNRevisionStringValue("$LastChangedRevision: 682 $");
         
         info.contacts.add(ModuleInfo.BM_MAILINGLIST);
         info.authors.add("Zia-Ul-Huda");
@@ -93,12 +93,6 @@ public class MSLAW extends MapScenario {
     public void go(String[] args)
     {
         super.go(args);
-
-        if (this.minSpeed == -1 || this.maxSpeed == -1) {
-            System.out.println("Please define the min and max node speed.");
-            System.exit(1);
-        }
-
         generate();
     }
 

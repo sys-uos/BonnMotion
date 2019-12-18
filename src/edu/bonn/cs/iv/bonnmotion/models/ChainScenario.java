@@ -173,12 +173,6 @@ public class ChainScenario implements Model {
 		for (int i = 0; i < args.length; i++){
 			this.clArgs[i] = args[i];
 		}
-
-		if (args.length == 0) {
-			System.out.println("Please define a model.");
-			System.exit(1);
-		}
-
 		Scenario s = null;
 		Scenario s_old = null;
 		for (int i = 0; i < args.length; i++) {

@@ -66,7 +66,6 @@ public abstract class App {
 				printStrace = true;
 				return true;
 			default:
-				System.out.println("Warning: Ignoring argument \"" + key + "\"");
 				return false;
 		}
 	}
