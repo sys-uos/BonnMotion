@@ -76,6 +76,12 @@ public class StaticDrift extends Scenario {
 	public void go(String[] args) {
 		parameterData.nodes = new MobileNode[0]; // to hide warning that number of nodes should be defined
 		super.go(args);
+
+		if (this.input_filename.isEmpty()) {
+			System.out.println("Please define a filename.");
+			System.exit(1);
+		}
+
 		generate();
 	}
 

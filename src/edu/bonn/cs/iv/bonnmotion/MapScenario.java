@@ -413,6 +413,14 @@ public class MapScenario extends Scenario {
             System.out.println("Error: Invalid clipping method!");
             System.exit(0);
         }
+        if (this.mapBBox == null) {
+            System.out.println("Please define a map bounding box.");
+            System.exit(1);
+        }
+        if (this.rsURL == null) {
+            System.out.println("Please define a route service URL.");
+            System.exit(1);
+        }
         
         if (transformation == null) {
         	transformation = new CoordinateTransformation(null, proj4lib.PROJ4J);

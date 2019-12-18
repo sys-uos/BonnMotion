@@ -311,7 +311,7 @@ public class Scenario  extends App implements Model, ScenarioLink {
 	 * 
 	 * @param basename
 	 *            Basename of the scenario
-	 * @param haveLD
+     * @param hasPrecomputedLinkDump
 	 *            have pre-computed link dump or read movements.gz
 	 */
 	protected String read(String basename, boolean hasPrecomputedLinkDump) throws FileNotFoundException, IOException {
@@ -701,7 +701,7 @@ public class Scenario  extends App implements Model, ScenarioLink {
 		while (Long.signum(next_seed) < 0) {
 			next_seed = getRand().nextLong();
 		}
-		System.out.println("Next RNG-Seed =" + next_seed+ " | #Randoms = "+count_rands);
+        System.out.println("Next RNG-Seed = " + next_seed + " | #Randoms = " + count_rands);
 	}
 	
 	/** Extract a certain time span from the scenario. */

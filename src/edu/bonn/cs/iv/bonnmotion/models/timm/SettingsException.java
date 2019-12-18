@@ -38,6 +38,7 @@ public class SettingsException extends Exception {
     public SettingsException(String msg, boolean fatal) {
         super(msg);
         if (fatal) {
+            System.err.println(getMessage());
             System.exit(-1);
         }
     }
@@ -49,6 +50,7 @@ public class SettingsException extends Exception {
     public SettingsException(String name, String value, String howValueShouldBe, boolean fatal) {
         super(String.format("Error: %s is %s but should be %s", name, value, howValueShouldBe));
         if (fatal) {
+            System.err.println(getMessage());
             System.exit(-1);
         }
     }    
