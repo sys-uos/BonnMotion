@@ -125,16 +125,6 @@ public class SWIM extends Scenario
 	public void go(String _args[])
 	{
 		super.go(_args);
-
-		if (this.nodeRadius == 0) {
-			System.out.println("Please define the node radius.");
-			System.exit(1);
-		}
-		if (this.nodeSpeedMultiplier == 0) {
-			System.out.println("Please define the node speed multiplier.");
-			System.exit(1);
-		}
-
 		generate();
 	}
 
