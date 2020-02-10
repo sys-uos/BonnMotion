@@ -1,7 +1,7 @@
 /*******************************************************************************
  ** BonnMotion - a mobility scenario generation and analysis tool             **
  ** Copyright (C) 2002-2012 University of Bonn                                **
- ** Copyright (C) 2012-2016 University of Osnabrueck                          **
+ ** Copyright (C) 2012-2020 University of Osnabrueck                          **
  **                                                                           **
  ** This program is free software; you can redistribute it and/or modify      **
  ** it under the terms of the GNU General Public License as published by      **
@@ -13,9 +13,9 @@
  ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             **
  ** GNU General Public License for more details.                              **
  **                                                                           **
- ** You should have received a copy of the GNU General Public License         **
- ** along with this program; if not, write to the Free Software               **
- ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA **
+ ** You should have received a copy of the GNU General Public License along   **
+ ** with this program; if not, write to the Free Software Foundation, Inc.,   **
+ ** 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               **
  *******************************************************************************/
 
 package edu.bonn.cs.iv.bonnmotion.apps;
@@ -35,7 +35,7 @@ public class CSVFile extends App {
         
         info.major = 1;
         info.minor = 0;
-        info.revision = ModuleInfo.getSVNRevisionStringValue("$LastChangedRevision: 723 $");
+        info.revision = ModuleInfo.getSVNRevisionStringValue("$LastChangedRevision: 765 $");
         
         info.contacts.add(ModuleInfo.BM_MAILINGLIST);
         info.authors.add("Matthias Schwamborn");
