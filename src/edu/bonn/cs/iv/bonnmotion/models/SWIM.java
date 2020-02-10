@@ -93,332 +93,385 @@ public class SWIM extends Scenario {
         info.authors.add("Jan-Hendrik Bolte");
         info.references.add("http://swim.di.uniroma1.it/files/SWIM-Simulator.tar.gz");
         info.references.add("http://swim.di.uniroma1.it/files/SWIM-Infocom09.pdf");
-        info.affiliation = ModuleInfo.UOS_SYS;
-    }
+		info.affiliation = ModuleInfo.UOS_SYS;
+	}
 
-    public static ModuleInfo getInfo() {
-        return info;
-    }
+	public static ModuleInfo getInfo()
+	{
+		return info;
+	}
 
-    public SWIM(int _nodes, double _x, double _y, double _duration, double _ignore, long _randomSeed, double _nodeRadius, double _cellDistanceWeight, double _nodeSpeedMultiplier, double _waitingTimeExponent, double _waitingTimeUpperBound) {
-        super(_nodes, _x, _y, _duration, _ignore, _randomSeed);
+	public SWIM(int _nodes, double _x, double _y, double _duration, double _ignore, long _randomSeed, double _nodeRadius, double _cellDistanceWeight, double _nodeSpeedMultiplier, double _waitingTimeExponent, double _waitingTimeUpperBound)
+	{
+		super(_nodes, _x, _y, _duration, _ignore, _randomSeed);
+		
+		this.nodeRadius 			= _nodeRadius;
+		this.cellDistanceWeight 	= _cellDistanceWeight;
+		this.nodeSpeedMultiplier 	= _nodeSpeedMultiplier;
+		this.waitingTimeExponent 	= _waitingTimeExponent;
+		this.waitingTimeUpperBound 	= _waitingTimeUpperBound;
+				
+		generate();
+	}
 
-        this.nodeRadius = _nodeRadius;
-        this.cellDistanceWeight = _cellDistanceWeight;
-        this.nodeSpeedMultiplier = _nodeSpeedMultiplier;
-        this.waitingTimeExponent = _waitingTimeExponent;
-        this.waitingTimeUpperBound = _waitingTimeUpperBound;
-        isSuperclass = this instanceof SteadyStateSWIM;
+	public SWIM(String[] _args)
+	{
+		go(_args);
+	}
 
-        if (!isSuperclass) {
-            generate();
-        }
-    }
+	public void go(String _args[])
+	{
+		super.go(_args);
 
-    SWIM() {
-        isSuperclass = this instanceof SteadyStateSWIM;
-    }
+		if (this.nodeRadius == 0) {
+			System.out.println("Please define the node radius.");
+			System.exit(1);
+		}
+		if (this.nodeSpeedMultiplier == 0) {
+			System.out.println("Please define the node speed multiplier.");
+			System.exit(1);
+		}
 
-    public SWIM(String[] _args) {
-        isSuperclass = this instanceof SteadyStateSWIM;
-        go(_args);
-    }
+		generate();
+	}
 
-    public void go(String _args[]) {
-        super.go(_args);
+	public void generate()
+	{
+		Locale.setDefault(Locale.ENGLISH);
+		
+		try  {
+			bw = new BufferedWriter(new FileWriter(new File("SwimTrace.txt")));
+			
+			preGeneration();		
+					
+			int nodeCount 							= this.nodeCount();
+			this.cellLength 						= nodeRadius / Math.sqrt(2.0);
+			this.cellCountPerSide 					= (int) (Math.ceil(1.0 / cellLength));
+			this.cellCount 		  					= cellCountPerSide * cellCountPerSide;
+			this.id 								= new int[nodeCount]; 
+			this.pos 								= new Position[nodeCount];	
+			this.state								= new State[nodeCount];
+			this.posTime							= new double[nodeCount];
+			this.dest 								= new Position[nodeCount];	
+			this.speed 								= new double[nodeCount];
+			this.waitTime 							= new double[nodeCount];
+			this.home 								= new Position[nodeCount];
+			this.currentCell 						= new int[nodeCount]; 
+			this.destinationCell 					= new int[nodeCount]; 
+			this.density 							= new double[nodeCount];
+			this.cellWeights 					 	= new double[nodeCount][];
+			this.number_of_nodes_seen 			 	= new int[nodeCount][];
+			this.number_of_nodes_seen_last_visit 	= new int[nodeCount][];
+	
+			meetInPlace = (AtomicReference<Boolean>[][]) new AtomicReference[nodeCount][];
+			for (int i = 0; i < nodeCount; ++i)
+			{
+				meetInPlace[i] = (AtomicReference<Boolean>[]) new AtomicReference[nodeCount];
+			}
+			for (int i = 0; i < nodeCount; ++i)
+			{
+				for (int j = 0; j < nodeCount; ++j)
+				{
+					meetInPlace[i][j] = new AtomicReference<Boolean>(false);
+					meetInPlace[j][i] = new AtomicReference<Boolean>(false);
+				}
+			}
+			
+			for (int i = 0; i < nodeCount; i++)
+			{
+				double y 		= this.randomNextDouble();
+				double x 		= this.randomNextDouble();
+				
+				Position homePos 					= new Position(x, y);
+				id[i]								= i;
+				pos[i]								= homePos;
+				state[i]							= State.NEW;			
+				posTime[i]							= 0.0;
+				dest[i]								= homePos;
+				speed[i]							= 0.0;
+				waitTime[i]							= 0.0;
+				home[i]								= homePos;
+				currentCell[i]						= this.getCellIndexFromPos(homePos);
+				destinationCell[i]					= currentCell[i];
+				density[i]							= Math.PI * nodeRadius * nodeRadius * nodeCount;
+				cellWeights[i] 						= new double[cellCount];
+				number_of_nodes_seen[i] 			= new int[cellCount];
+				number_of_nodes_seen_last_visit[i]  = new int[cellCount];
+				
+				for (int j = 0; j < cellWeights[i].length; j++)
+				{
+					cellWeights[i][j] 						= 0.0;
+					number_of_nodes_seen[i][j] 				= 0;
+					number_of_nodes_seen_last_visit[i][j] 	= 0;
+					
+					if (cellDistanceWeight == 0.0)
+					{
+						number_of_nodes_seen[i][j] 				= 1;
+						number_of_nodes_seen_last_visit[i][j]	= 1;
+					}
+				}
+				
+				parameterData.nodes[i] = new MobileNode();
+			}
+			
+			this.initNodes();
+				
+			Comparator<Event> comp = new Comparator<Event>()
+			{
+				@Override
+				public int compare(Event o1, Event o2)
+				{
+					// the event with greater time has lower priority
+					if (o1.time >= o2.time)
+					{
+						return 1;
+					} 
+					else
+					{
+						return -1;
+					}
+				}
+			};
+			this.eventQueue = new PriorityQueue<>(101, comp);
+	
+			currentTime = 0;
+	
+			// check for initial contacts
+			for (int i = 0; i < nodeCount; i++)
+			{
+				for (int j = i + 1; j < nodeCount; j++)
+				{
+					if (circles(new Position(getPosition(i).x, getPosition(i).y), nodeRadius, new Position(getPosition(j).x, getPosition(j).y), nodeRadius))
+					{
+						eventQueue.add(new Event(Type.MEET, i, j, 0));
+					}
+				}
+			}
+						
+			// create initial events
+			for (int i = 0; i < nodeCount; i++)
+			{
+				eventQueue.add(new Event(Type.START_WAITING, i, -1, 0));
+			}
+						
+			while (true)
+			{			
+				if (eventQueue.size() == 0)
+				{
+					break;
+				}
+				
+				Event e = eventQueue.poll();
+				currentTime = e.time;
+				
+				if (currentTime >= parameterData.duration)
+				{
+					break;
+				}
+				
+				if (currentTime > parameterData.ignore)
+				{
+					if (e.type == Type.MEET)
+					{
+						if ((getState(e.firstNode) == State.WAITING && getState(e.secondNode) == State.MOVING))
+						{
+							if (circles(getPosition(e.firstNode), nodeRadius, getDestination(e.secondNode), nodeRadius))
+							{
+								meetInPlace[e.firstNode][e.secondNode].set(true);
+								meetInPlace[e.secondNode][e.firstNode].set(true);
+								PrintEvent(e, "MP");
+							} 
+							else 
+							{
+								PrintEvent(e, "MM");
+							}
+						} 
+						else
+						{
+							if ((getState(e.firstNode) == State.MOVING && getState(e.secondNode) == State.MOVING))
+							{
+								if (circles(getDestination(e.firstNode), nodeRadius, getDestination(e.secondNode), nodeRadius))
+								{
+									// Find the time in which at least one node
+									// reaches the destinations
+									double minTravelTime = Math.min(getPositionAbsoluteTime(e.firstNode) + getTravelTime(e.firstNode), getPositionAbsoluteTime(e.secondNode) + getTravelTime(e.secondNode));
+	
+									// If in that time the nodes are still seeing
+									// each other we print MP, otherwise we print MM
+									if (circles(computePositionAtTime(minTravelTime, e.firstNode), nodeRadius, computePositionAtTime(minTravelTime, e.secondNode), nodeRadius))
+									{
+										meetInPlace[e.firstNode][e.secondNode].set(true);
+										meetInPlace[e.secondNode][e.firstNode].set(true);
+										PrintEvent(e, "MP");
+									} 
+									else 
+									{
+										PrintEvent(e, "MM");
+									}
+								} 
+								else 
+								{
+									PrintEvent(e, "MM");
+								}
+							}
+							else if ((getState(e.firstNode) == State.MOVING && getState(e.secondNode) == State.WAITING))
+							{
+								if (circles(getDestination(e.firstNode), nodeRadius, getPosition(e.secondNode), nodeRadius))
+								{
+									meetInPlace[e.firstNode][e.secondNode].set(true);
+									meetInPlace[e.secondNode][e.firstNode].set(true);
+									PrintEvent(e, "MP");
+								} 
+								else 
+								{
+									PrintEvent(e, "MM");
+								}
+							}
+						}
+					} 
+					else if (e.type == Type.LEAVE)
+					{
+						if (meetInPlace[e.firstNode][e.secondNode].get().booleanValue() || meetInPlace[e.secondNode][e.firstNode].get().booleanValue())
+						{
+							meetInPlace[e.firstNode][e.secondNode].set(false);
+							meetInPlace[e.secondNode][e.firstNode].set(false);
+							PrintEvent(e, "LP");
+						} 
+						else 
+						{
+							PrintEvent(e, "LM");
+						}
+					} 
+					else 
+					{
+						PrintEvent(e);
+					}
+				}
+				
+				// handle event
+				switch (e.type)
+				{
+					case START_MOVING:
+						updatePosition(e.firstNode, getDestination(e.firstNode), currentTime);
+						moveToRandomDestination(e.firstNode);
+						eventQueue.add(new Event(Type.END_MOVING, e.firstNode, -1, e.time + getTravelTime(e.firstNode)));
+						checkContacts(e.firstNode);
+						break;
+		
+					case START_WAITING:
+						updatePosition(e.firstNode, getDestination(e.firstNode), currentTime);
+						waitRandomTime(e.firstNode);
+						double timeToWait = getTravelTime(e.firstNode);
+						eventQueue.add(new Event(Type.END_WAITING, e.firstNode, -1, e.time + timeToWait));
+						checkContacts(e.firstNode);
+						break;
+		
+					case END_MOVING:
+						eventQueue.add(new Event(Type.START_WAITING, e.firstNode, -1, e.time));
+						break;
+		
+					case END_WAITING:
+						eventQueue.add(new Event(Type.START_MOVING, e.firstNode, -1, e.time));
+						break;
+		
+					case MEET:
+						meet(e.firstNode, e.secondNode);
+						meet(e.secondNode, e.firstNode);
+						break;
+						
+					case LEAVE:
+						break;
+		
+					default:
+						break;
+				}
+			}
+			postGeneration();
+			bw.flush();
+		
+		} 
+		catch (Exception e) 
+		{
+			e.printStackTrace();
+		} 
+		finally 
+		{
+			try 
+			{
+				bw.close();
+			} 
+			catch (IOException e) 
+			{
+				e.printStackTrace();
+			}
+		}
+	}
 
-        if (this.nodeRadius == 0) {
-            System.out.println("Please define the node radius.");
-            System.exit(1);
-        }
-        if (this.nodeSpeedMultiplier == 0) {
-            System.out.println("Please define the node speed multiplier.");
-            System.exit(1);
-        }
+	protected boolean parseArg(char _key, String _value)
+	{
+		switch (_key)
+		{
+			case 'r':
+				this.nodeRadius = Double.parseDouble(_value);
+				return true;
+			case 'c':
+				this.cellDistanceWeight = Double.parseDouble(_value);
+				return true;
+			case 'm':
+				this.nodeSpeedMultiplier = Double.parseDouble(_value);
+				return true;
+			case 'e':
+				this.waitingTimeExponent = Double.parseDouble(_value);
+				return true;
+			case 'u':
+				this.waitingTimeUpperBound = Double.parseDouble(_value);
+				return true;
+			default:
+				return super.parseArg(_key, _value);
 
-        if (!isSuperclass) {
-            generate();
-        }
-    }
+		}
+	}
 
-    public void generate() {
-        Locale.setDefault(Locale.ENGLISH);
+	protected boolean parseArg(String _key, String _value)
+	{
+		switch (_key)
+		{
+			case "nodeRadius":
+				this.nodeRadius = Double.parseDouble(_value);
+				return true;
+			case "cellDistanceWeight":
+				this.cellDistanceWeight = Double.parseDouble(_value);
+				return true;
+			case "nodeSpeedMultiplier":
+				this.nodeSpeedMultiplier = Double.parseDouble(_value);
+				return true;
+			case "waitingTimeExponent":
+				this.waitingTimeExponent = Double.parseDouble(_value);
+				return true;
+			case "waitingTimeUpperBound":
+				this.waitingTimeUpperBound = Double.parseDouble(_value);
+				return true;
+			default:
+				return super.parseArg(_key, _value);
+		}
+	}
 
-        try {
-            bw = new BufferedWriter(new FileWriter(new File("SwimTrace.txt")));
+	public void write(String _filename) throws FileNotFoundException, IOException
+	{
+		String[] p  = new String[5];
+		int i  	    = 0;
+        p[i++] 		= "nodeRadius=" 			+ this.nodeRadius;
+        p[i++] 		= "cellDistanceWeight="  	+ this.cellDistanceWeight;
+        p[i++] 		= "nodeSpeedMultiplier=" 	+ this.nodeSpeedMultiplier;
+        p[i++] 		= "waitingTimeExponent="  	+ this.waitingTimeExponent;
+        p[i++] 		= "waitingTimeUpperBound=" 	+ this.waitingTimeUpperBound;
+        super.writeParametersAndMovement(_filename, p);
+	}
+	
+	public static void printHelp()
+	{
+		System.out.println(getInfo().toDetailString());
 
-            preGeneration();
-
-            int nodeCount = this.nodeCount();
-            this.cellLength = nodeRadius / Math.sqrt(2.0);
-            this.cellCountPerSide = (int) (Math.ceil(1.0 / cellLength));
-            this.cellCount = cellCountPerSide * cellCountPerSide;
-            this.id = new int[nodeCount];
-            this.pos = new Position[nodeCount];
-            this.state = new State[nodeCount];
-            this.posTime = new double[nodeCount];
-            this.dest = new Position[nodeCount];
-            this.speed = new double[nodeCount];
-            this.waitTime = new double[nodeCount];
-            this.home = new Position[nodeCount];
-            this.currentCell = new int[nodeCount];
-            this.destinationCell = new int[nodeCount];
-            this.density = new double[nodeCount];
-            this.cellWeights = new double[nodeCount][];
-            this.number_of_nodes_seen = new int[nodeCount][];
-            this.number_of_nodes_seen_last_visit = new int[nodeCount][];
-
-            meetInPlace = new BooleanWrapper[nodeCount][];
-            for (int i = 0; i < nodeCount; ++i) {
-                meetInPlace[i] = new BooleanWrapper[nodeCount];
-            }
-            for (int i = 0; i < nodeCount; ++i) {
-                for (int j = 0; j < nodeCount; ++j) {
-                    meetInPlace[i][j] = new BooleanWrapper(false);
-                    meetInPlace[j][i] = new BooleanWrapper(false);
-                }
-            }
-
-            for (int i = 0; i < nodeCount; i++) {
-                double y = this.randomNextDouble();
-                double x = this.randomNextDouble();
-
-                Position homePos = new Position(x, y);
-                id[i] = i;
-                pos[i] = homePos;
-                state[i] = State.NEW;
-                posTime[i] = 0.0;
-                dest[i] = homePos;
-                speed[i] = 0.0;
-                waitTime[i] = 0.0;
-                home[i] = homePos;
-                currentCell[i] = this.getCellIndexFromPos(homePos);
-                destinationCell[i] = currentCell[i];
-                density[i] = Math.PI * nodeRadius * nodeRadius * nodeCount;
-                cellWeights[i] = new double[cellCount];
-                number_of_nodes_seen[i] = new int[cellCount];
-                number_of_nodes_seen_last_visit[i] = new int[cellCount];
-
-                for (int j = 0; j < cellWeights[i].length; j++) {
-                    cellWeights[i][j] = 0.0;
-                    number_of_nodes_seen[i][j] = 0;
-                    number_of_nodes_seen_last_visit[i][j] = 0;
-
-                    if (cellDistanceWeight == 0.0) {
-                        number_of_nodes_seen[i][j] = 1;
-                        number_of_nodes_seen_last_visit[i][j] = 1;
-                    }
-                }
-
-                parameterData.nodes[i] = new MobileNode();
-            }
-
-            this.initNodes();
-
-            Comparator<Event> comp = new Comparator<Event>() {
-                @Override
-                public int compare(Event o1, Event o2) {
-                    // the event with greater time has lower priority
-                    if (o1.time >= o2.time) {
-                        return 1;
-                    } else {
-                        return -1;
-                    }
-                }
-            };
-            this.eventQueue = new PriorityQueue<>(101, comp);
-
-            currentTime = 0;
-
-            // check for initial contacts
-            for (int i = 0; i < nodeCount; i++) {
-                for (int j = i + 1; j < nodeCount; j++) {
-                    if (circles(new Position(getPosition(i).x, getPosition(i).y), nodeRadius, new Position(getPosition(j).x, getPosition(j).y), nodeRadius)) {
-                        eventQueue.add(new Event(Type.MEET, i, j, 0));
-                    }
-                }
-            }
-
-            // create initial events
-            for (int i = 0; i < nodeCount; i++) {
-                eventQueue.add(new Event(Type.START_WAITING, i, -1, 0));
-            }
-
-            while (true) {
-                if (eventQueue.size() == 0) {
-                    break;
-                }
-
-                Event e = eventQueue.poll();
-                currentTime = e.time;
-
-                if (currentTime >= parameterData.duration) {
-                    break;
-                }
-
-                if (currentTime > parameterData.ignore) {
-                    if (e.type == Type.MEET) {
-                        if ((getState(e.firstNode) == State.WAITING && getState(e.secondNode) == State.MOVING)) {
-                            if (circles(getPosition(e.firstNode), nodeRadius, getDestination(e.secondNode), nodeRadius)) {
-                                meetInPlace[e.firstNode][e.secondNode].val = true;
-                                meetInPlace[e.secondNode][e.firstNode].val = true;
-                                PrintEvent(e, "MP");
-                            } else {
-                                PrintEvent(e, "MM");
-                            }
-                        } else {
-                            if ((getState(e.firstNode) == State.MOVING && getState(e.secondNode) == State.MOVING)) {
-                                if (circles(getDestination(e.firstNode), nodeRadius, getDestination(e.secondNode), nodeRadius)) {
-                                    // Find the time in which at least one node
-                                    // reaches the destinations
-                                    double minTravelTime = Math.min(getPositionAbsoluteTime(e.firstNode) + getTravelTime(e.firstNode), getPositionAbsoluteTime(e.secondNode) + getTravelTime(e.secondNode));
-
-                                    // If in that time the nodes are still seeing
-                                    // each other we print MP, otherwise we print MM
-                                    if (circles(computePositionAtTime(minTravelTime, e.firstNode), nodeRadius, computePositionAtTime(minTravelTime, e.secondNode), nodeRadius)) {
-                                        meetInPlace[e.firstNode][e.secondNode].val = true;
-                                        meetInPlace[e.secondNode][e.firstNode].val = true;
-                                        PrintEvent(e, "MP");
-                                    } else {
-                                        PrintEvent(e, "MM");
-                                    }
-                                } else {
-                                    PrintEvent(e, "MM");
-                                }
-                            } else if ((getState(e.firstNode) == State.MOVING && getState(e.secondNode) == State.WAITING)) {
-                                if (circles(getDestination(e.firstNode), nodeRadius, getPosition(e.secondNode), nodeRadius)) {
-                                    meetInPlace[e.firstNode][e.secondNode].val = true;
-                                    meetInPlace[e.secondNode][e.firstNode].val = true;
-                                    PrintEvent(e, "MP");
-                                } else {
-                                    PrintEvent(e, "MM");
-                                }
-                            }
-                        }
-                    } else if (e.type == Type.LEAVE) {
-                        if (meetInPlace[e.firstNode][e.secondNode].val || meetInPlace[e.secondNode][e.firstNode].val) {
-                            meetInPlace[e.firstNode][e.secondNode].val = false;
-                            meetInPlace[e.secondNode][e.firstNode].val = false;
-                            PrintEvent(e, "LP");
-                        } else {
-                            PrintEvent(e, "LM");
-                        }
-                    } else {
-                        PrintEvent(e);
-                    }
-                }
-
-                // handle event
-                switch (e.type) {
-                    case START_MOVING:
-                        updatePosition(e.firstNode, getDestination(e.firstNode), currentTime);
-                        moveToRandomDestination(e.firstNode);
-                        eventQueue.add(new Event(Type.END_MOVING, e.firstNode, -1, e.time + getTravelTime(e.firstNode)));
-                        checkContacts(e.firstNode);
-                        break;
-
-                    case START_WAITING:
-                        updatePosition(e.firstNode, getDestination(e.firstNode), currentTime);
-                        waitRandomTime(e.firstNode);
-                        double timeToWait = getTravelTime(e.firstNode);
-                        eventQueue.add(new Event(Type.END_WAITING, e.firstNode, -1, e.time + timeToWait));
-                        checkContacts(e.firstNode);
-                        break;
-
-                    case END_MOVING:
-                        eventQueue.add(new Event(Type.START_WAITING, e.firstNode, -1, e.time));
-                        break;
-
-                    case END_WAITING:
-                        eventQueue.add(new Event(Type.START_MOVING, e.firstNode, -1, e.time));
-                        break;
-
-                    case MEET:
-                        meet(e.firstNode, e.secondNode);
-                        meet(e.secondNode, e.firstNode);
-                        break;
-
-                    case LEAVE:
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-            postGeneration();
-            bw.flush();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                bw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    protected boolean parseArg(char _key, String _value) {
-        switch (_key) {
-            case 'r':
-                this.nodeRadius = Double.parseDouble(_value);
-                return true;
-            case 'c':
-                this.cellDistanceWeight = Double.parseDouble(_value);
-                return true;
-            case 'm':
-                this.nodeSpeedMultiplier = Double.parseDouble(_value);
-                return true;
-            case 'e':
-                this.waitingTimeExponent = Double.parseDouble(_value);
-                return true;
-            case 'u':
-                this.waitingTimeUpperBound = Double.parseDouble(_value);
-                return true;
-            default:
-                return super.parseArg(_key, _value);
-
-        }
-    }
-
-    protected boolean parseArg(String _key, String _value) {
-        switch (_key) {
-            case "nodeRadius":
-                this.nodeRadius = Double.parseDouble(_value);
-                return true;
-            case "cellDistanceWeight":
-                this.cellDistanceWeight = Double.parseDouble(_value);
-                return true;
-            case "nodeSpeedMultiplier":
-                this.nodeSpeedMultiplier = Double.parseDouble(_value);
-                return true;
-            case "waitingTimeExponent":
-                this.waitingTimeExponent = Double.parseDouble(_value);
-                return true;
-            case "waitingTimeUpperBound":
-                this.waitingTimeUpperBound = Double.parseDouble(_value);
-                return true;
-            default:
-                return super.parseArg(_key, _value);
-        }
-    }
-
-    public void write(String _filename) throws FileNotFoundException, IOException {
-        String[] p = new String[5];
-        int i = 0;
-        p[i++] = "nodeRadius=" + this.nodeRadius;
-        p[i++] = "cellDistanceWeight=" + this.cellDistanceWeight;
-        p[i++] = "nodeSpeedMultiplier=" + this.nodeSpeedMultiplier;
-        p[i++] = "waitingTimeExponent=" + this.waitingTimeExponent;
-        p[i++] = "waitingTimeUpperBound=" + this.waitingTimeUpperBound;
-        super.writeParametersAndMovement(_filename, App.stringArrayConcat(p, this.paramsSubclass));
-    }
-
-    public static void printHelp() {
-        if (!isSuperclass) {
-            System.out.println(getInfo().toDetailString());
-        }
         Scenario.printHelp();
         System.out.println(getInfo().name + ":");
         System.out.println("\t-r <node radius>\n" +
