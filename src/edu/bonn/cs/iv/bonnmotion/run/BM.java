@@ -54,6 +54,7 @@ public class BM {
         "Static",
         "StaticDrift",
         "SteadyStateRandomWaypoint",
+        "SteadyStateSWIM",
         "SWIM",
         "TIMM",
         "TLW",
