@@ -1,7 +1,7 @@
 /*******************************************************************************
  ** BonnMotion - a mobility scenario generation and analysis tool             **
- ** Copyright (C) 2014      University of Osnabrueck                          **
- ** Code: Jan-Hendrik Bolte                                                   **
+ ** Copyright (C) 2002-2012 University of Bonn                                **
+ ** Copyright (C) 2012-2019 University of Osnabrueck                          **
  **                                                                           **
  ** This program is free software; you can redistribute it and/or modify      **
  ** it under the terms of the GNU General Public License as published by      **
@@ -13,9 +13,9 @@
  ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             **
  ** GNU General Public License for more details.                              **
  **                                                                           **
- ** You should have received a copy of the GNU General Public License         **
- ** along with this program; if not, write to the Free Software               **
- ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA **
+ ** You should have received a copy of the GNU General Public License along   **
+ ** with this program; if not, write to the Free Software Foundation, Inc.,   **
+ ** 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               **
  *******************************************************************************/
 
 package edu.bonn.cs.iv.bonnmotion.models;
@@ -91,6 +91,16 @@ public class TLW extends Scenario {
     
     public void go(String[] args) {
         super.go(args);
+
+        if (this.alpha < .1 || this.alpha > 2) {
+            System.out.println("Alpha value must be in [.1,2]");
+            System.exit(1);
+        }
+        if (this.beta < .1 || this.beta > 2) {
+            System.out.println("Beta value must be in [.1,2]");
+            System.exit(1);
+        }
+
         generate();
     }
 
@@ -223,6 +233,7 @@ public class TLW extends Scenario {
 	        	}
 	        	else {
 	        		System.err.println("Error@TLW: invalid boundary condition");
+                    System.exit(1);
 	        	}
 	        	
 	        	double dist = Math.sqrt( (double) Math.pow( (next_x - x_values[i-1]), 2 ) + Math.pow( (next_y - y_values[i-1]), 2 ) );

@@ -1,7 +1,7 @@
 /*******************************************************************************
  ** BonnMotion - a mobility scenario generation and analysis tool             **
  ** Copyright (C) 2002-2012 University of Bonn                                **
- ** Copyright (C) 2012-2016 University of Osnabrueck                          **
+ ** Copyright (C) 2012-2020 University of Osnabrueck                          **
  **                                                                           **
  ** This program is free software; you can redistribute it and/or modify      **
  ** it under the terms of the GNU General Public License as published by      **
@@ -13,9 +13,9 @@
  ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             **
  ** GNU General Public License for more details.                              **
  **                                                                           **
- ** You should have received a copy of the GNU General Public License         **
- ** along with this program; if not, write to the Free Software               **
- ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA **
+ ** You should have received a copy of the GNU General Public License along   **
+ ** with this program; if not, write to the Free Software Foundation, Inc.,   **
+ ** 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               **
  *******************************************************************************/
 
 package edu.bonn.cs.iv.bonnmotion.apps;
@@ -37,7 +37,7 @@ public class NSFile extends App {
         
         info.major = 1;
         info.minor = 1;
-        info.revision = ModuleInfo.getSVNRevisionStringValue("$LastChangedRevision: 650 $");
+        info.revision = ModuleInfo.getSVNRevisionStringValue("$LastChangedRevision: 740 $");
         
         info.contacts.add(ModuleInfo.BM_MAILINGLIST);
         info.authors.add("University of Bonn");
@@ -226,7 +226,7 @@ public class NSFile extends App {
 				//Waypoint w2 = waypoints.elementAt(i);
 				Waypoint w2 = mn.getWaypoint(i);
 				Position p2 = w2.pos;
-				double dist = p.distance(w2.pos);
+				double dist = w.pos.distance(w2.pos);
 				r[i + 2] = "$ns_ at " + w.time + " \"" + id + " setdest " + (p2.x + border) + " " + (p2.y + border) + " " + (p2.z + border)
 						+ " " + (dist / (w2.time - w.time)) + "\"";
 				if (dist == 0.0) {

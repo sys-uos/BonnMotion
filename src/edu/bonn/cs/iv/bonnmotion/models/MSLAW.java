@@ -1,9 +1,7 @@
 /*******************************************************************************
  ** BonnMotion - a mobility scenario generation and analysis tool             **
- ** Copyright (C) 2002-2010 University of Bonn                                **
- ** Copyright (C) 2014      University of Osnabrueck                          **
- ** Code: Zia-Ul-Huda                                                         **
- **       Matthias Schwamborn                                                 **
+ ** Copyright (C) 2002-2012 University of Bonn                                **
+ ** Copyright (C) 2012-2020 University of Osnabrueck                          **
  **                                                                           **
  ** This program is free software; you can redistribute it and/or modify      **
  ** it under the terms of the GNU General Public License as published by      **
@@ -15,9 +13,9 @@
  ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             **
  ** GNU General Public License for more details.                              **
  **                                                                           **
- ** You should have received a copy of the GNU General Public License         **
- ** along with this program; if not, write to the Free Software               **
- ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA **
+ ** You should have received a copy of the GNU General Public License along   **
+ ** with this program; if not, write to the Free Software Foundation, Inc.,   **
+ ** 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               **
  *******************************************************************************/
 
 package edu.bonn.cs.iv.bonnmotion.models;
@@ -47,7 +45,7 @@ public class MSLAW extends MapScenario {
         
         info.major = 2;
         info.minor = 0;
-        info.revision = ModuleInfo.getSVNRevisionStringValue("$LastChangedRevision: 682 $");
+        info.revision = ModuleInfo.getSVNRevisionStringValue("$LastChangedRevision: 766 $");
         
         info.contacts.add(ModuleInfo.BM_MAILINGLIST);
         info.authors.add("Zia-Ul-Huda");
@@ -93,6 +91,12 @@ public class MSLAW extends MapScenario {
     public void go(String[] args)
     {
         super.go(args);
+
+        if (this.minSpeed == -1 || this.maxSpeed == -1) {
+            System.out.println("Please define the min and max node speed.");
+            System.exit(1);
+        }
+
         generate();
     }
 

@@ -1,7 +1,7 @@
 /*******************************************************************************
  ** BonnMotion - a mobility scenario generation and analysis tool             **
  ** Copyright (C) 2002-2012 University of Bonn                                **
- ** Copyright (C) 2012-2016 University of Osnabrueck                          **
+ ** Copyright (C) 2012-2020 University of Osnabrueck                          **
  **                                                                           **
  ** This program is free software; you can redistribute it and/or modify      **
  ** it under the terms of the GNU General Public License as published by      **
@@ -13,9 +13,9 @@
  ** MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the             **
  ** GNU General Public License for more details.                              **
  **                                                                           **
- ** You should have received a copy of the GNU General Public License         **
- ** along with this program; if not, write to the Free Software               **
- ** Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA **
+ ** You should have received a copy of the GNU General Public License along   **
+ ** with this program; if not, write to the Free Software Foundation, Inc.,   **
+ ** 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.               **
  *******************************************************************************/
 
 package edu.bonn.cs.iv.bonnmotion;
@@ -311,7 +311,7 @@ public class Scenario  extends App implements Model, ScenarioLink {
 	 * 
 	 * @param basename
 	 *            Basename of the scenario
-	 * @param haveLD
+     * @param hasPrecomputedLinkDump
 	 *            have pre-computed link dump or read movements.gz
 	 */
 	protected String read(String basename, boolean hasPrecomputedLinkDump) throws FileNotFoundException, IOException {
@@ -701,7 +701,7 @@ public class Scenario  extends App implements Model, ScenarioLink {
 		while (Long.signum(next_seed) < 0) {
 			next_seed = getRand().nextLong();
 		}
-		System.out.println("Next RNG-Seed =" + next_seed+ " | #Randoms = "+count_rands);
+        System.out.println("Next RNG-Seed = " + next_seed + " | #Randoms = " + count_rands);
 	}
 	
 	/** Extract a certain time span from the scenario. */
